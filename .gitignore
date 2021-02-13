@@ -1,0 +1,14 @@
+.idea/
+
+*.pyc
+*.bak
+*.log
+
+venv/
+__target__/
+dist/
+.cache/
+node_modules/
+__pycache__/
+build/
+*.egg-info/

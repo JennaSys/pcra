@@ -1,0 +1,9 @@
+--- asset.js	2020-11-30 17:49:49.690000000 -0800
++++ asset.js	2020-11-30 17:50:42.795302864 -0800
+@@ -1,5 +1,5 @@
+ const Asset = require('parcel-bundler/src/Asset');
+-const logger = require('parcel-bundler/src/Logger');
++const logger = require('@parcel/logger/src/Logger');
+ const child_process = require('child_process');
+ const path = require('path');
+ const fs = require('fs');
