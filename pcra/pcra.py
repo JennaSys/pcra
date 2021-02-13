@@ -332,7 +332,7 @@ def main():
     parser.add_argument('folder',
                         metavar='FOLDER_NAME',
                         type=str,
-                        help='name of the project folder')
+                        help='name of the project folder (must not already exist)')
 
     parser.add_argument('-co',
                         '--client-only',

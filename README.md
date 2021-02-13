@@ -38,7 +38,7 @@ Python Create React App: Template based Python React project scaffolding creator
 
 positional arguments:
 ```bash
-  FOLDER_NAME           name of the project folder
+  FOLDER_NAME           name of the project folder (must not already exist)
 ```
 
 
