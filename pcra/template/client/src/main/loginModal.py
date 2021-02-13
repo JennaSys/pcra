@@ -49,7 +49,8 @@ def Login(props):
                                          'fullWidth': True,
                                          'value': username,
                                          'onChange': handleUsernameChange,
-                                         'autoFocus': True
+                                         'autoFocus': True,
+                                         'placeholder': "admin"
                                          }
                              ),
                           el(TextField, {'label': 'Password',
@@ -57,7 +58,8 @@ def Login(props):
                                          'fullWidth': True,
                                          'type': 'password',
                                          'value': password,
-                                         'onChange': handlePasswordChange
+                                         'onChange': handlePasswordChange,
+                                         'placeholder': "123"
                                          }
                              ),
                           el(Button, {'type': 'submit',
