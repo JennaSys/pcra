@@ -29,9 +29,9 @@ setup(
     url="https://github.com/JennaSys/pcra",
     author="John Sheehan",
     author_email="jennasyseng@gmail.com",
-    license="GPL-3.0",
+    license="MIT",
     classifiers=[
-        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+        "License :: OSI Approved :: MIT License",
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
         "Framework :: Flask",
