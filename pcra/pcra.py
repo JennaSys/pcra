@@ -240,6 +240,26 @@ class PCRA:
         print(f"{Style.RESET_ALL}")
 
 
+def _validate_system(cli_args) -> bool:
+    if not check_python_version(PYTHON_VERSION_REQUIRED):
+        printerr(f'This command requires Python {PYTHON_VERSION_REQUIRED} and you are using Python {sys.version.split()[0]}')
+        return False
+
+    if os.path.isdir(cli_args.folder):
+        printerr('The path specified already exists!')
+        return False
+
+    if not cli_args.no_git and not check_git_installed():
+        printerr('This command requires git to be installed.  Please install it and try again.')
+        return False
+
+    if not cli_args.no_javascript and not check_npm_installed():
+        printerr('This command requires npm to be installed.  Please install Node.js and try again.')
+        return False
+
+    return True
+
+
 class WideFormatter(argparse.HelpFormatter):
     def __init__(self, prog):
         width = shutil.get_terminal_size()[0]
@@ -285,34 +305,20 @@ def main():
 
     args = parser.parse_args()
 
-    if not check_python_version(PYTHON_VERSION_REQUIRED):
-        printerr(f'This command requires Python {PYTHON_VERSION_REQUIRED} and you are using Python {sys.version.split()[0]}')
+    if _validate_system(args):
+        project = PCRA(args)
+
+        if not project.validate_template():
+            printerr(f"Supplied template folder at {project.template_dir} is not valid!")
+            sys.exit()
+
+        project.copy_template()
+        project.make_venv()
+        project.make_npm()
+        project.make_git()
+        project.print_instructions()
+    else:
         sys.exit()
-
-    if os.path.isdir(args.folder):
-        printerr('The path specified already exists!')
-        sys.exit()
-
-    if not args.no_git and not check_git_installed():
-        printerr('This command requires git to be installed.  Please install it and try again.')
-        sys.exit()
-
-    if not args.no_javascript and not check_npm_installed():
-        printerr('This command requires npm to be installed.  Please install Node.js and try again.')
-        sys.exit()
-
-    # All good so proceed...
-    project = PCRA(args)
-
-    if not project.validate_template():
-        printerr(f"Supplied template folder at {project.template_dir} is not valid!")
-        sys.exit()
-
-    project.copy_template()
-    project.make_venv()
-    project.make_npm()
-    project.make_git()
-    project.print_instructions()
 
 
 if __name__ == '__main__':
