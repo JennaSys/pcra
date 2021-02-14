@@ -52,7 +52,7 @@ def printwarn(msg):
 
 def check_python_version(version_required):
     python_version = sys.version_info
-    required_version = tuple(tuple(map(int, version_required.split('.'))))
+    required_version = tuple(map(int, version_required.split('.')))
     return (python_version.major, python_version.minor) == required_version
 
 
