@@ -5,7 +5,6 @@ import re
 
 try:
     from colorama import Fore, Style, init as colorama_init
-
     colorama_init()
 except ModuleNotFoundError:
     # If colorama is not installed create failover classes for colored text output
@@ -27,6 +26,7 @@ except ModuleNotFoundError:
 
         class Style:
             RESET_ALL = '\033[1;37;0m'
+
 
 def printmsg(msg):
     print(f'{Fore.CYAN}{msg}{Style.RESET_ALL}')

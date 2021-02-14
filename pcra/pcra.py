@@ -183,9 +183,10 @@ class PCRA:
                 os.remove(os.path.join(self.client_dir, 'package.json'))
 
     def make_git(self):
+        os.chdir(self.project_dir)
+
         if self.has_git:
             printmsg('Committing project to local Git repository...')
-            os.chdir(self.project_dir)
             run_cmd(['git', 'init'])
             run_cmd(['git', 'add', '.'])
             run_cmd(['git', 'commit', '-m', '"Initial Commit"'])
