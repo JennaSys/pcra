@@ -28,15 +28,6 @@ except ModuleNotFoundError:
         class Style:
             RESET_ALL = '\033[1;37;0m'
 
-_process_kwargs = dict(stdout=subprocess.PIPE,
-                       stderr=subprocess.PIPE,
-                       universal_newlines=True,
-                       text=True
-                       )
-if os.name == 'nt':
-    _process_kwargs['shell'] = True  # Windows npm commands fail without shell: FileNotFoundError
-
-
 def printmsg(msg):
     print(f'{Fore.CYAN}{msg}{Style.RESET_ALL}')
 
@@ -47,6 +38,15 @@ def printerr(msg):
 
 def printwarn(msg):
     print(f'{Fore.YELLOW}{msg}{Style.RESET_ALL}')
+
+
+_process_kwargs = dict(stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE,
+                       universal_newlines=True,
+                       text=True
+                       )
+if os.name == 'nt':
+    _process_kwargs['shell'] = True  # Windows npm commands fail without shell: FileNotFoundError
 
 
 def check_python_version(version_required):
