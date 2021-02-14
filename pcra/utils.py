@@ -3,9 +3,9 @@ import sys
 import subprocess
 import re
 
-
 try:
     from colorama import Fore, Style, init as colorama_init
+
     colorama_init()
 except ModuleNotFoundError:
     # If colorama is not installed create failover classes for colored text output
@@ -28,14 +28,13 @@ except ModuleNotFoundError:
         class Style:
             RESET_ALL = '\033[1;37;0m'
 
-
-process_kwargs = dict(stdout=subprocess.PIPE,
-                      stderr=subprocess.PIPE,
-                      universal_newlines=True,
-                      text=True
-                      )
+_process_kwargs = dict(stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE,
+                       universal_newlines=True,
+                       text=True
+                       )
 if os.name == 'nt':
-    process_kwargs['shell'] = True  # Windows npm commands fail without shell: FileNotFoundError
+    _process_kwargs['shell'] = True  # Windows npm commands fail without shell: FileNotFoundError
 
 
 def printmsg(msg):
@@ -58,7 +57,7 @@ def check_python_version(version_required):
 
 def check_git_installed():
     try:
-        process = subprocess.Popen(['git', '--version'], **process_kwargs)
+        process = subprocess.Popen(['git', '--version'], **_process_kwargs)
         return process.stdout.readline().startswith('git version')
     except FileNotFoundError as e:
         print(e)
@@ -67,7 +66,7 @@ def check_git_installed():
 
 def check_npm_installed():
     try:
-        process = subprocess.Popen(['npm', '--version'], **process_kwargs)
+        process = subprocess.Popen(['npm', '--version'], **_process_kwargs)
         r = re.compile(r'^\d+\.\d+\.\d+$')  # 6.14.8
         return r.match(process.stdout.readline()) is not None
     except FileNotFoundError as e:
@@ -75,28 +74,28 @@ def check_npm_installed():
         return False
 
 
-def print_if_data(msg):
+def _print_if_data(msg):
     msg_text = msg.strip()
     if len(msg_text) > 0:
         print(msg_text)
 
 
 def run_cmd(args):
-    process = subprocess.Popen(args, **process_kwargs)
+    process = subprocess.Popen(args, **_process_kwargs)
 
     while True:
         output = process.stdout.readline()
-        print_if_data(output)
+        _print_if_data(output)
         # Do something else
         return_code = process.poll()
         if return_code is not None:
             # Process has finished, read rest of the output
             for output in process.stdout.readlines():
-                print_if_data(output)
+                _print_if_data(output)
 
             if return_code != 0:
                 print('RETURN CODE:', return_code)
                 for output in process.stderr.readlines():
-                    print_if_data(output)
+                    _print_if_data(output)
 
             break

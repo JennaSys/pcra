@@ -13,7 +13,6 @@ from .utils import check_python_version, check_git_installed, check_npm_installe
 
 PYTHON_VERSION_REQUIRED = '3.7'
 
-
 is_windows = os.name == 'nt'
 
 
@@ -45,6 +44,20 @@ class PCRA:
         else:
             if not os.path.isabs(self.template_dir):
                 self.template_dir = os.path.realpath(os.path.join(self.current_dir, self.template_dir))
+
+    def _update_project_name(self):
+        with open('package.json', 'r') as f:
+            json_data = json.load(f)
+            json_data['name'] = self.project_name
+
+        with open('package.json', 'w') as f:
+            f.write(json.dumps(json_data, indent=2))
+
+    def _copy_template_file(self, destination_dir, file_name):
+        if os.path.isfile(os.path.join(self.template_dir, file_name)):
+            shutil.copy2(os.path.join(self.template_dir, file_name), destination_dir)
+        else:
+            shutil.copy2(os.path.join(self.fallback_dir, file_name), destination_dir)
 
     def validate_template(self) -> bool:
         printmsg('Validating template...')
@@ -90,7 +103,7 @@ class PCRA:
         printmsg('Copying template...')
         if self.has_server:
             shutil.copytree(os.path.join(self.template_dir, 'client'), self.client_dir, ignore=shutil.ignore_patterns('__pycache__'))
-            self.copy_template_file(self.client_dir, 'dev-server.js')
+            self._copy_template_file(self.client_dir, 'dev-server.js')
 
             if self.has_npm:
                 os.mkdir(os.path.join(self.client_dir, '.git'))  # Empty folder so that npm version works
@@ -100,7 +113,7 @@ class PCRA:
             shutil.copytree(os.path.join(self.template_dir, 'client'), self.client_dir, ignore=shutil.ignore_patterns('__pycache__'))
 
         if self.has_git:
-            self.copy_template_file(self.project_dir, '.gitignore')
+            self._copy_template_file(self.project_dir, '.gitignore')
 
         if os.path.isfile(os.path.join(self.template_dir, 'README.md')):
             shutil.copy2(os.path.join(self.template_dir, 'README.md'), self.project_dir)
@@ -145,7 +158,7 @@ class PCRA:
             if not os.path.isfile(os.path.join(self.template_dir, 'client', 'package.json')):
                 shutil.copy2(os.path.join(self.fallback_dir, 'client', 'package.json'), '.')
 
-            self.update_project_name()
+            self._update_project_name()
             run_cmd(['npm', 'install'])
 
             printmsg('Patching Transcrypt Parcel Plugin...')
@@ -185,20 +198,6 @@ class PCRA:
             run_cmd(['npm', 'version', 'minor'])
         else:
             printwarn('SKIPPING npm version!')
-
-    def update_project_name(self):
-        with open('package.json', 'r') as f:
-            json_data = json.load(f)
-            json_data['name'] = self.project_name
-
-        with open('package.json', 'w') as f:
-            f.write(json.dumps(json_data, indent=2))
-
-    def copy_template_file(self, destination_dir, file_name):
-        if os.path.isfile(os.path.join(self.template_dir, file_name)):
-            shutil.copy2(os.path.join(self.template_dir, file_name), destination_dir)
-        else:
-            shutil.copy2(os.path.join(self.fallback_dir, file_name), destination_dir)
 
     def print_instructions(self):
         os.chdir(self.current_dir)
