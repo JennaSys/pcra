@@ -12,7 +12,7 @@ The script performs the following actions:
 
 - Creates a source code folder structure in the specified project folder
 - Adds a set of core Python source code modules for creating the React application
-- Optionally stubs out a Flask back-end application with user session management
+- Optionally stubs out a Flask back-end application with basic user session management
 - Creates virtual environments for front-end and back-end applications
 - PIP installs Transcrypt and Flask into the virtual environments
 - NPM installs Parcel and the Transcrypt plug-in for Parcel
