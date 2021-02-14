@@ -2,323 +2,242 @@ import os
 import sys
 import argparse
 import shutil
-import subprocess
-import re
 import json
 import venv
 
 # import patch
 
-is_windows = os.name == 'nt'
+from .utils import printerr, printmsg, printwarn, Fore, Style
+from .utils import check_python_version, check_git_installed, check_npm_installed, run_cmd
+
 
 PYTHON_VERSION_REQUIRED = '3.7'
 
-try:
-    from colorama import Fore, Style, init as colorama_init
-    colorama_init()
-except ModuleNotFoundError:
-    # If colorama is not installed create failover classes for colored text output
-    if is_windows:
-        print("[Colored output not available]")
-        class Fore:
-            CYAN = ''
-            YELLOW = ''
-            RED = ''
-        class Style:
-            RESET_ALL = ''
-    else:
-        class Fore:
-            CYAN = '\033[1;36;48m'
-            YELLOW = '\033[1;33;48m'
-            RED = '\033[1;31;48m'
-        class Style:
-            RESET_ALL = '\033[1;37;0m'
+
+is_windows = os.name == 'nt'
 
 
-process_kwargs = dict(stdout=subprocess.PIPE,
-                      stderr=subprocess.PIPE,
-                      universal_newlines=True,
-                      text=True
-                      )
-if is_windows:
-    process_kwargs['shell'] = True  # Windows npm commands fail without shell: FileNotFoundError
+class PCRA:
+    def __init__(self, project_path, cli_args):
+        self.has_server = not cli_args.client_only
+        self.has_venv = not cli_args.no_virtualenv
+        self.has_npm = not cli_args.no_javascript
+        self.has_git = not cli_args.no_git
+        self.template_dir = cli_args.template
+        self.current_dir = os.getcwd()
 
+        self.project_path = project_path
+        if not os.path.isabs(self.project_path):
+            self.project_path = os.path.realpath(os.path.join(self.current_dir, self.project_path))
 
-def printmsg(msg):
-    print(f'{Fore.CYAN}{msg}{Style.RESET_ALL}')
+        self.project_folder = os.path.basename(os.path.normpath(self.project_path))
 
+        self.script_dir = os.path.dirname(os.path.realpath(__file__))
+        self.fallback_dir = os.path.join(self.script_dir, 'template')
 
-def printerr(msg):
-    print(f'{Fore.RED}{msg}{Style.RESET_ALL}')
+        if self.has_server:
+            self.client_dir = os.path.join(self.project_path, 'client')
+        else:
+            self.client_dir = self.project_path
 
+        if self.template_dir is None:
+            self.template_dir = self.fallback_dir
+        else:
+            if not os.path.isabs(self.template_dir):
+                self.template_dir = os.path.realpath(os.path.join(self.current_dir, self.template_dir))
 
-def printwarn(msg):
-    print(f'{Fore.YELLOW}{msg}{Style.RESET_ALL}')
-
-
-def check_python_version():
-    python_version = sys.version_info
-    required_version = tuple(tuple(map(int, PYTHON_VERSION_REQUIRED.split('.'))))
-    return (python_version.major, python_version.minor) == required_version
-
-
-def check_git_installed():
-    try:
-        process = subprocess.Popen(['git', '--version'], **process_kwargs)
-        return process.stdout.readline().startswith('git version')
-    except FileNotFoundError as e:
-        print(e)
-        return False
-
-
-def check_npm_installed():
-    try:
-        process = subprocess.Popen(['npm', '--version'], **process_kwargs)
-        r = re.compile(r'^\d+\.\d+\.\d+$')  # 6.14.8
-        return r.match(process.stdout.readline()) is not None
-    except FileNotFoundError as e:
-        print(e)
-        return False
-
-
-def run_cmd(args):
-    process = subprocess.Popen(args, **process_kwargs)
-
-    while True:
-        output = process.stdout.readline()
-        output_text = output.strip()
-        if len(output_text) > 0:
-            print(output_text)
-        # Do something else
-        return_code = process.poll()
-        if return_code is not None:
-            # Process has finished, read rest of the output
-            for output in process.stdout.readlines():
-                output_text = output.strip()
-                if len(output_text) > 0:
-                    print(output_text)
-
-            if return_code != 0:
-                print('RETURN CODE:', return_code)
-                for output in process.stderr.readlines():
-                    output_text = output.strip()
-                    if len(output_text) > 0:
-                        print(output_text)
-
-            break
-
-
-def update_project_name(new_name):
-    with open('package.json', 'r') as f:
-        json_data = json.load(f)
-        json_data['name'] = new_name
-
-    with open('package.json', 'w') as f:
-        f.write(json.dumps(json_data, indent=2))
-
-
-def validate_template(template_dir, is_fs=True, has_venv=True, has_npm=True, has_git=True) -> bool:
-    if not os.path.isdir(template_dir):
-        printerr("The template path specified does not exist!")
-        return False
-
-    if not os.path.isdir(os.path.join(template_dir, 'client')):
-        printerr("The 'client' folder does not exist in the template!")
-        return False
-
-    if has_git and has_npm and not os.path.isdir(os.path.join(template_dir, 'client', 'src')):
-        printerr("The 'client' folder does have an src folder in the template!")
-        return False
-
-    if is_fs and not os.path.isdir(os.path.join(template_dir, 'server')):
-        printerr("The 'server' folder does not exist in the template!")
-        return False
-
-    if has_venv and not os.path.isfile(os.path.join(template_dir, 'client', 'requirements.txt')):
-        printwarn("The client 'requirements.txt' pip dependency file does not exist in the template...using default")
-
-    if has_npm and not os.path.isfile(os.path.join(template_dir, 'client', 'package.json')):
-        printwarn("The client 'package.json' file does not exist in the template...using default")
-
-    patch_name = 'asset.js.win.patch' if is_windows else 'asset.js.patch'
-    if has_npm and not os.path.isfile(os.path.join(template_dir, patch_name)):
-        printwarn(f"The '{patch_name}' file does not exist in the template...using default")
-
-    if is_fs and not os.path.isfile(os.path.join(template_dir, 'dev-server.js')):
-        printwarn("The 'dev-server.js' middleware proxy file does not exist in the template...using default")
-
-    if is_fs and has_venv and not os.path.isfile(os.path.join(template_dir, 'server', 'requirements.txt')):
-        printwarn("The server 'requirements.txt' pip dependency file does not exist in the template...using default")
-
-    if has_git and not os.path.isfile(os.path.join(template_dir, '.gitignore')):
-        printwarn("The '.gitignore' file does not exist in the template...using default")
-
-    return True
-
-
-def copy_template_file(template_dir, fallback_dir, destination_dir, file_name):
-    if os.path.isfile(os.path.join(template_dir, file_name)):
-        shutil.copy2(os.path.join(template_dir, file_name), destination_dir)
-    else:
-        shutil.copy2(os.path.join(fallback_dir, file_name), destination_dir)
-
-
-def print_instructions(project_path, full_stack, has_venv, has_npm):
-    print(f"{Fore.YELLOW}")
-    print(f"\nInstructions{' to run' if has_venv and has_npm else ''}:")
-    print('=' * 20)
-
-    script_folder = 'Scripts' if is_windows else 'bin'
-    script_sh = '' if is_windows else '. '
-    if full_stack:
-        print(f"cd {os.path.join(project_path, 'server')}")
-        if has_venv:
-            print(f"{script_sh}{os.path.join('.', 'venv', script_folder, 'activate')}")
-            print("python -m appserver")
-        print()
-        print(f"cd {os.path.join(project_path, 'client')}")
-        if has_venv:
-            print(f"{script_sh}{os.path.join('.', 'venv', script_folder, 'activate')}")
-            if has_npm:
-                print("npm run dev")
-                print()
-                print("Access application in web browser at http://localhost:8080")
-    else:
-        print(f"cd {project_path}")
-        if has_venv:
-            print(f"{script_sh}{os.path.join('.', 'venv', script_folder, 'activate')}")
-            if has_npm:
-                print("npm start")
-                print()
-                print("Access application in web browser at http://localhost:1234")
-
-    print(f"{Style.RESET_ALL}")
-
-
-def make_project(project_path, full_stack=True, has_venv=False, has_npm=False, has_git=False, template_dir=None):
-    current_dir = os.getcwd()
-    project_folder = os.path.basename(os.path.normpath(project_path))
-    if not os.path.isabs(project_path):
-        project_path = os.path.realpath(os.path.join(current_dir, project_path))
-
-    script_dir = os.path.dirname(os.path.realpath(__file__))
-    fallback_dir = os.path.join(script_dir, 'template')
-    if template_dir is None:
-        template_dir = fallback_dir
-    else:
-        if not os.path.isabs(template_dir):
-            template_dir = os.path.realpath(os.path.join(current_dir, template_dir))
-
+    def validate_template(self) -> bool:
         printmsg('Validating template...')
-        if not validate_template(template_dir, full_stack, has_venv, has_npm, has_git):
-            printerr(f"Supplied template folder at {template_dir} is not valid!")
-            return
 
-    printmsg('Copying template...')
-    if full_stack:
-        client_dir = os.path.join(project_path, 'client')
-        shutil.copytree(os.path.join(template_dir, 'client'), client_dir, ignore=shutil.ignore_patterns('__pycache__'))
-        copy_template_file(template_dir, fallback_dir, client_dir, 'dev-server.js')
+        if not os.path.isdir(self.template_dir):
+            printerr("The template path specified does not exist!")
+            return False
 
-        if has_npm:
-            os.mkdir(os.path.join(client_dir, '.git'))  # Empty folder so that npm version works
-        printmsg('Copying server template...')
-        shutil.copytree(os.path.join(template_dir, 'server'), os.path.join(project_path, 'server'))
-    else:
-        client_dir = project_path
-        shutil.copytree(os.path.join(template_dir, 'client'), client_dir, ignore=shutil.ignore_patterns('__pycache__'))
+        if not os.path.isdir(os.path.join(self.template_dir, 'client')):
+            printerr("The 'client' folder does not exist in the template!")
+            return False
 
-    if has_git:
-        copy_template_file(template_dir, fallback_dir, project_path, '.gitignore')
+        if self.has_git and self.has_npm and not os.path.isdir(os.path.join(self.template_dir, 'client', 'src')):
+            printerr("The 'client' folder does have an src folder in the template!")
+            return False
 
-    if os.path.isfile(os.path.join(template_dir, 'README.md')):
-        shutil.copy2(os.path.join(template_dir, 'README.md'), project_path)
+        if self.has_server and not os.path.isdir(os.path.join(self.template_dir, 'server')):
+            printerr("The 'server' folder does not exist in the template!")
+            return False
 
-    os.chdir(client_dir)
+        if self.has_venv and not os.path.isfile(os.path.join(self.template_dir, 'client', 'requirements.txt')):
+            printwarn("The client 'requirements.txt' pip dependency file does not exist in the template...using default")
 
-    if has_venv:
-        printmsg('Creating virtual environment...')
-        venv.create('venv', with_pip=True)
-        printmsg('Installing Python dependencies...')
-        script_folder = 'Scripts' if is_windows else 'bin'
+        if self.has_npm and not os.path.isfile(os.path.join(self.template_dir, 'client', 'package.json')):
+            printwarn("The client 'package.json' file does not exist in the template...using default")
 
-        # Use the default requirements.txt if the supplied template doesn't have one
-        if not os.path.isfile(os.path.join(template_dir, 'client', 'requirements.txt')):
-            shutil.copy2(os.path.join(fallback_dir, 'client', 'requirements.txt'), '.')
+        patch_name = 'asset.js.win.patch' if is_windows else 'asset.js.patch'
+        if self.has_npm and not os.path.isfile(os.path.join(self.template_dir, patch_name)):
+            printwarn(f"The '{patch_name}' file does not exist in the template...using default")
 
-        run_cmd([os.path.join('.', 'venv', script_folder, 'pip'), 'install', '-r', 'requirements.txt'])
+        if self.has_server and not os.path.isfile(os.path.join(self.template_dir, 'dev-server.js')):
+            printwarn("The 'dev-server.js' middleware proxy file does not exist in the template...using default")
 
-        if full_stack:
-            printmsg('Creating server virtual environment...')
-            os.chdir(os.path.join(project_path, 'server'))
+        if self.has_server and self.has_venv and not os.path.isfile(os.path.join(self.template_dir, 'server', 'requirements.txt')):
+            printwarn("The server 'requirements.txt' pip dependency file does not exist in the template...using default")
+
+        if self.has_git and not os.path.isfile(os.path.join(self.template_dir, '.gitignore')):
+            printwarn("The '.gitignore' file does not exist in the template...using default")
+
+        return True
+
+    def copy_template(self):
+        printmsg('Copying template...')
+        if self.has_server:
+            shutil.copytree(os.path.join(self.template_dir, 'client'), self.client_dir, ignore=shutil.ignore_patterns('__pycache__'))
+            self.copy_template_file(self.client_dir, 'dev-server.js')
+
+            if self.has_npm:
+                os.mkdir(os.path.join(self.client_dir, '.git'))  # Empty folder so that npm version works
+            printmsg('Copying server template...')
+            shutil.copytree(os.path.join(self.template_dir, 'server'), os.path.join(self.project_path, 'server'))
+        else:
+            shutil.copytree(os.path.join(self.template_dir, 'client'), self.client_dir, ignore=shutil.ignore_patterns('__pycache__'))
+
+        if self.has_git:
+            self.copy_template_file(self.project_path, '.gitignore')
+
+        if os.path.isfile(os.path.join(self.template_dir, 'README.md')):
+            shutil.copy2(os.path.join(self.template_dir, 'README.md'), self.project_path)
+
+    def make_venv(self):
+        os.chdir(self.client_dir)
+
+        if self.has_venv:
+            printmsg('Creating virtual environment...')
             venv.create('venv', with_pip=True)
             printmsg('Installing Python dependencies...')
+            script_folder = 'Scripts' if is_windows else 'bin'
 
             # Use the default requirements.txt if the supplied template doesn't have one
-            if not os.path.isfile(os.path.join(template_dir, 'server', 'requirements.txt')):
-                shutil.copy2(os.path.join(fallback_dir, 'server', 'requirements.txt'), '.')
+            if not os.path.isfile(os.path.join(self.template_dir, 'client', 'requirements.txt')):
+                shutil.copy2(os.path.join(self.fallback_dir, 'client', 'requirements.txt'), '.')
 
             run_cmd([os.path.join('.', 'venv', script_folder, 'pip'), 'install', '-r', 'requirements.txt'])
-            os.chdir(client_dir)
-    else:
-        printwarn('SKIPPING virtual environment creation!')
 
-    if has_npm:
-        printmsg('Installing JavaScript dependencies...')
+            if self.has_server:
+                printmsg('Creating server virtual environment...')
+                os.chdir(os.path.join(self.project_path, 'server'))
+                venv.create('venv', with_pip=True)
+                printmsg('Installing Python dependencies...')
 
-        # Use the default package.json if the supplied template doesn't have one
-        if not os.path.isfile(os.path.join(template_dir, 'client', 'package.json')):
-            shutil.copy2(os.path.join(fallback_dir, 'client', 'package.json'), '.')
+                # Use the default requirements.txt if the supplied template doesn't have one
+                if not os.path.isfile(os.path.join(self.template_dir, 'server', 'requirements.txt')):
+                    shutil.copy2(os.path.join(self.fallback_dir, 'server', 'requirements.txt'), '.')
 
-        update_project_name(project_folder)
-        run_cmd(['npm', 'install'])
+                run_cmd([os.path.join('.', 'venv', script_folder, 'pip'), 'install', '-r', 'requirements.txt'])
+                os.chdir(self.client_dir)
+        else:
+            printwarn('SKIPPING virtual environment creation!')
 
-        printmsg('Patching Transcrypt Parcel Plugin...')
-        patch_name = 'asset.js.win.patch' if is_windows else 'asset.js.patch'
+    def make_npm(self):
+        os.chdir(self.client_dir)
 
-        try:
-            import patch
+        if self.has_npm:
+            printmsg('Installing JavaScript dependencies...')
 
-            # Use the default patch if the supplied template doesn't have one
-            if not os.path.isfile(os.path.join(template_dir, patch_name)):
-                patch_set = patch.fromfile(os.path.join(fallback_dir, patch_name))
-            else:
-                patch_set = patch.fromfile(os.path.join(template_dir, patch_name))
+            # Use the default package.json if the supplied template doesn't have one
+            if not os.path.isfile(os.path.join(self.template_dir, 'client', 'package.json')):
+                shutil.copy2(os.path.join(self.fallback_dir, 'client', 'package.json'), '.')
 
-            patch_set.apply(root=os.path.join('.', 'node_modules', 'parcel-plugin-transcrypt'))
-        except Exception as e:
-            printerr("Transcrypt Parcel Plugin patch failed!")
-            printerr(e)
-    else:
-        printwarn('SKIPPING JavaScript dependencies!')
-        if os.path.isfile(os.path.join(client_dir, 'package.json')):
-            os.remove(os.path.join(client_dir, 'package.json'))
+            self.update_project_name()
+            run_cmd(['npm', 'install'])
 
-    if has_git:
-        printmsg('Committing project to local Git repository...')
-        os.chdir(project_path)
-        run_cmd(['git', 'init'])
-        run_cmd(['git', 'add', '.'])
-        run_cmd(['git', 'commit', '-m', '"Initial Commit"'])
-    else:
-        printwarn('SKIPPING Git repository creation!')
+            printmsg('Patching Transcrypt Parcel Plugin...')
+            patch_name = 'asset.js.win.patch' if is_windows else 'asset.js.patch'
 
-    if has_npm and has_git:
-        printmsg('Setting npm version...')
-        os.chdir(client_dir)
-        run_cmd(['npm', 'version', 'minor'])
-    else:
-        printwarn('SKIPPING npm version!')
+            try:
+                import patch
 
-    os.chdir(current_dir)
-    printmsg(f'Project [{project_folder}] created in:')
-    print(f'  {project_path}')
+                # Use the default patch if the supplied template doesn't have one
+                if not os.path.isfile(os.path.join(self.template_dir, patch_name)):
+                    patch_set = patch.fromfile(os.path.join(self.fallback_dir, patch_name))
+                else:
+                    patch_set = patch.fromfile(os.path.join(self.template_dir, patch_name))
 
-    if is_windows:
-        printwarn("\nNOTE: Windows users will need to set the 'script-shell' option for npm in order for the scripts to work:")
-        printwarn('  npm config set script-shell "C:\\Program Files\\git\\bin\\bash.exe"\n')
+                patch_set.apply(root=os.path.join('.', 'node_modules', 'parcel-plugin-transcrypt'))
+            except Exception as e:
+                printerr("Transcrypt Parcel Plugin patch failed!")
+                printerr(e)
+        else:
+            printwarn('SKIPPING JavaScript dependencies!')
+            if os.path.isfile(os.path.join(self.client_dir, 'package.json')):
+                os.remove(os.path.join(self.client_dir, 'package.json'))
 
-    print_instructions(project_path, full_stack, has_venv, has_npm)
+    def make_git(self):
+        if self.has_git:
+            printmsg('Committing project to local Git repository...')
+            os.chdir(self.project_path)
+            run_cmd(['git', 'init'])
+            run_cmd(['git', 'add', '.'])
+            run_cmd(['git', 'commit', '-m', '"Initial Commit"'])
+        else:
+            printwarn('SKIPPING Git repository creation!')
+
+        if self.has_npm and self.has_git:
+            printmsg('Setting npm version...')
+            os.chdir(self.client_dir)
+            run_cmd(['npm', 'version', 'minor'])
+        else:
+            printwarn('SKIPPING npm version!')
+
+    def update_project_name(self):
+        with open('package.json', 'r') as f:
+            json_data = json.load(f)
+            json_data['name'] = self.project_folder
+
+        with open('package.json', 'w') as f:
+            f.write(json.dumps(json_data, indent=2))
+
+    def copy_template_file(self, destination_dir, file_name):
+        if os.path.isfile(os.path.join(self.template_dir, file_name)):
+            shutil.copy2(os.path.join(self.template_dir, file_name), destination_dir)
+        else:
+            shutil.copy2(os.path.join(self.fallback_dir, file_name), destination_dir)
+
+    def print_instructions(self):
+        os.chdir(self.current_dir)
+        printmsg(f'Project [{self.project_folder}] created in:')
+        print(f'  {self.project_path}')
+
+        if is_windows:
+            printwarn("\nNOTE: Windows users will need to set the 'script-shell' option for npm in order for the scripts to work:")
+            printwarn('  npm config set script-shell "C:\\Program Files\\git\\bin\\bash.exe"\n')
+
+        print(f"{Fore.YELLOW}")
+        print(f"\nInstructions{' to run' if self.has_venv and self.has_npm else ''}:")
+        print('=' * 20)
+
+        script_folder = 'Scripts' if is_windows else 'bin'
+        script_sh = '' if is_windows else '. '
+        if self.has_server:
+            print(f"cd {os.path.join(self.project_path, 'server')}")
+            if self.has_venv:
+                print(f"{script_sh}{os.path.join('.', 'venv', script_folder, 'activate')}")
+                print("python -m appserver")
+            print()
+            print(f"cd {os.path.join(self.project_path, 'client')}")
+            if self.has_venv:
+                print(f"{script_sh}{os.path.join('.', 'venv', script_folder, 'activate')}")
+                if self.has_npm:
+                    print("npm run dev")
+                    print()
+                    print("Access application in web browser at http://localhost:8080")
+        else:
+            print(f"cd {self.project_path}")
+            if self.has_venv:
+                print(f"{script_sh}{os.path.join('.', 'venv', script_folder, 'activate')}")
+                if self.has_npm:
+                    print("npm start")
+                    print()
+                    print("Access application in web browser at http://localhost:1234")
+
+        print(f"{Style.RESET_ALL}")
 
 
 class WideFormatter(argparse.HelpFormatter):
@@ -367,7 +286,7 @@ def main():
     args = parser.parse_args()
     project_path = args.folder
 
-    if not check_python_version():
+    if not check_python_version(PYTHON_VERSION_REQUIRED):
         printerr(f'This command requires Python {PYTHON_VERSION_REQUIRED} and you are using Python {sys.version.split()[0]}')
         sys.exit()
 
@@ -384,7 +303,17 @@ def main():
         sys.exit()
 
     # All good so proceed...
-    make_project(project_path, not args.client_only, not args.no_virtualenv, not args.no_javascript, not args.no_git, args.template)
+    project = PCRA(project_path, args)
+
+    if not project.validate_template():
+        printerr(f"Supplied template folder at {project.template_dir} is not valid!")
+        sys.exit()
+
+    project.copy_template()
+    project.make_venv()
+    project.make_npm()
+    project.make_git()
+    project.print_instructions()
 
 
 if __name__ == '__main__':
