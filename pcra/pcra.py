@@ -26,19 +26,19 @@ class PCRA:
         self.has_git = not cli_args.no_git
         self.template_dir = cli_args.template
 
-        self.project_path = cli_args.folder
-        if not os.path.isabs(self.project_path):
-            self.project_path = os.path.realpath(os.path.join(self.current_dir, self.project_path))
+        self.project_dir = cli_args.folder
+        if not os.path.isabs(self.project_dir):
+            self.project_dir = os.path.realpath(os.path.join(self.current_dir, self.project_dir))
 
-        self.project_dir = os.path.basename(os.path.normpath(self.project_path))
+        self.project_name = os.path.basename(os.path.normpath(self.project_dir))
 
         self.script_dir = os.path.dirname(os.path.realpath(__file__))
         self.fallback_dir = os.path.join(self.script_dir, 'template')
 
         if self.has_server:
-            self.client_dir = os.path.join(self.project_path, 'client')
+            self.client_dir = os.path.join(self.project_dir, 'client')
         else:
-            self.client_dir = self.project_path
+            self.client_dir = self.project_dir
 
         if self.template_dir is None:
             self.template_dir = self.fallback_dir
@@ -95,15 +95,15 @@ class PCRA:
             if self.has_npm:
                 os.mkdir(os.path.join(self.client_dir, '.git'))  # Empty folder so that npm version works
             printmsg('Copying server template...')
-            shutil.copytree(os.path.join(self.template_dir, 'server'), os.path.join(self.project_path, 'server'))
+            shutil.copytree(os.path.join(self.template_dir, 'server'), os.path.join(self.project_dir, 'server'))
         else:
             shutil.copytree(os.path.join(self.template_dir, 'client'), self.client_dir, ignore=shutil.ignore_patterns('__pycache__'))
 
         if self.has_git:
-            self.copy_template_file(self.project_path, '.gitignore')
+            self.copy_template_file(self.project_dir, '.gitignore')
 
         if os.path.isfile(os.path.join(self.template_dir, 'README.md')):
-            shutil.copy2(os.path.join(self.template_dir, 'README.md'), self.project_path)
+            shutil.copy2(os.path.join(self.template_dir, 'README.md'), self.project_dir)
 
     def make_venv(self):
         os.chdir(self.client_dir)
@@ -122,7 +122,7 @@ class PCRA:
 
             if self.has_server:
                 printmsg('Creating server virtual environment...')
-                os.chdir(os.path.join(self.project_path, 'server'))
+                os.chdir(os.path.join(self.project_dir, 'server'))
                 venv.create('venv', with_pip=True)
                 printmsg('Installing Python dependencies...')
 
@@ -172,7 +172,7 @@ class PCRA:
     def make_git(self):
         if self.has_git:
             printmsg('Committing project to local Git repository...')
-            os.chdir(self.project_path)
+            os.chdir(self.project_dir)
             run_cmd(['git', 'init'])
             run_cmd(['git', 'add', '.'])
             run_cmd(['git', 'commit', '-m', '"Initial Commit"'])
@@ -189,7 +189,7 @@ class PCRA:
     def update_project_name(self):
         with open('package.json', 'r') as f:
             json_data = json.load(f)
-            json_data['name'] = self.project_dir
+            json_data['name'] = self.project_name
 
         with open('package.json', 'w') as f:
             f.write(json.dumps(json_data, indent=2))
@@ -202,8 +202,8 @@ class PCRA:
 
     def print_instructions(self):
         os.chdir(self.current_dir)
-        printmsg(f'Project [{self.project_dir}] created in:')
-        print(f'  {self.project_path}')
+        printmsg(f'Project [{self.project_name}] created in:')
+        print(f'  {self.project_dir}')
 
         if is_windows:
             printwarn("\nNOTE: Windows users will need to set the 'script-shell' option for npm in order for the scripts to work:")
@@ -216,12 +216,12 @@ class PCRA:
         script_folder = 'Scripts' if is_windows else 'bin'
         script_sh = '' if is_windows else '. '
         if self.has_server:
-            print(f"cd {os.path.join(self.project_path, 'server')}")
+            print(f"cd {os.path.join(self.project_dir, 'server')}")
             if self.has_venv:
                 print(f"{script_sh}{os.path.join('.', 'venv', script_folder, 'activate')}")
                 print("python -m appserver")
             print()
-            print(f"cd {os.path.join(self.project_path, 'client')}")
+            print(f"cd {os.path.join(self.project_dir, 'client')}")
             if self.has_venv:
                 print(f"{script_sh}{os.path.join('.', 'venv', script_folder, 'activate')}")
                 if self.has_npm:
@@ -229,7 +229,7 @@ class PCRA:
                     print()
                     print("Access application in web browser at http://localhost:8080")
         else:
-            print(f"cd {self.project_path}")
+            print(f"cd {self.project_dir}")
             if self.has_venv:
                 print(f"{script_sh}{os.path.join('.', 'venv', script_folder, 'activate')}")
                 if self.has_npm:
