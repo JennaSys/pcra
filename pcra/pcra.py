@@ -18,15 +18,15 @@ is_windows = os.name == 'nt'
 
 
 class PCRA:
-    def __init__(self, project_path, cli_args):
+    def __init__(self, cli_args):
+        self.current_dir = os.getcwd()
         self.has_server = not cli_args.client_only
         self.has_venv = not cli_args.no_virtualenv
         self.has_npm = not cli_args.no_javascript
         self.has_git = not cli_args.no_git
         self.template_dir = cli_args.template
-        self.current_dir = os.getcwd()
 
-        self.project_path = project_path
+        self.project_path = cli_args.folder
         if not os.path.isabs(self.project_path):
             self.project_path = os.path.realpath(os.path.join(self.current_dir, self.project_path))
 
@@ -284,13 +284,12 @@ def main():
                         help='alternate template folder to use')
 
     args = parser.parse_args()
-    project_path = args.folder
 
     if not check_python_version(PYTHON_VERSION_REQUIRED):
         printerr(f'This command requires Python {PYTHON_VERSION_REQUIRED} and you are using Python {sys.version.split()[0]}')
         sys.exit()
 
-    if os.path.isdir(project_path):
+    if os.path.isdir(args.folder):
         printerr('The path specified already exists!')
         sys.exit()
 
@@ -303,7 +302,7 @@ def main():
         sys.exit()
 
     # All good so proceed...
-    project = PCRA(project_path, args)
+    project = PCRA(args)
 
     if not project.validate_template():
         printerr(f"Supplied template folder at {project.template_dir} is not valid!")
