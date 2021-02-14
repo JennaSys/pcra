@@ -30,7 +30,7 @@ class PCRA:
         if not os.path.isabs(self.project_path):
             self.project_path = os.path.realpath(os.path.join(self.current_dir, self.project_path))
 
-        self.project_folder = os.path.basename(os.path.normpath(self.project_path))
+        self.project_dir = os.path.basename(os.path.normpath(self.project_path))
 
         self.script_dir = os.path.dirname(os.path.realpath(__file__))
         self.fallback_dir = os.path.join(self.script_dir, 'template')
@@ -189,7 +189,7 @@ class PCRA:
     def update_project_name(self):
         with open('package.json', 'r') as f:
             json_data = json.load(f)
-            json_data['name'] = self.project_folder
+            json_data['name'] = self.project_dir
 
         with open('package.json', 'w') as f:
             f.write(json.dumps(json_data, indent=2))
@@ -202,7 +202,7 @@ class PCRA:
 
     def print_instructions(self):
         os.chdir(self.current_dir)
-        printmsg(f'Project [{self.project_folder}] created in:')
+        printmsg(f'Project [{self.project_dir}] created in:')
         print(f'  {self.project_path}')
 
         if is_windows:
