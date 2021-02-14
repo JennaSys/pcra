@@ -22,7 +22,7 @@ def get_new_version(level=None) -> str:
     return '.'.join([str(ver_num) for ver_num in version_nums])
 
 
-def tag_git(semver: str) -> bool:
+def tag_git(semver) -> bool:
     clean = subprocess.check_output(['git', 'status', '--porcelain']) == b''
 
     if clean:
@@ -39,22 +39,22 @@ def tag_git(semver: str) -> bool:
         return False
 
 
-def update_local(semver: str):
+def update_local(semver):
     with open(VERSION_FILE, 'w') as version_file:
         version_file.write(f'__version__ = "{semver}"\n')
 
 
 def main():
     if len(sys.argv) > 1:
-        lev = sys.argv[1]
-        if lev in levels:
-            new_ver = get_new_version(levels[lev])
+        level_name = sys.argv[1]
+        if level_name in levels:
+            new_semver = get_new_version(levels[level_name])
 
-            if tag_git(new_ver):
-                print(f'Version updated to {new_ver}')
+            if tag_git(new_semver):
+                print(f'Version updated to {new_semver}')
 
         else:
-            print(f"ERROR: '{lev}' is not a valid semver level!")
+            print(f"ERROR: '{level_name}' is not a valid semver level!")
     else:
         current_ver = get_new_version()
         print(f'Version is currently at {current_ver}')
