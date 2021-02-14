@@ -163,29 +163,34 @@ def copy_template_file(template_dir, fallback_dir, destination_dir, file_name):
         shutil.copy2(os.path.join(fallback_dir, file_name), destination_dir)
 
 
-def print_instructions(project_path, full_stack):
+def print_instructions(project_path, full_stack, has_venv, has_npm):
     print(f"{Fore.YELLOW}")
-    print("\nInstructions to run:")
+    print(f"\nInstructions{' to run' if has_venv and has_npm else ''}:")
     print('=' * 20)
 
     script_folder = 'Scripts' if is_windows else 'bin'
     script_sh = '' if is_windows else '. '
     if full_stack:
         print(f"cd {os.path.join(project_path, 'server')}")
-        print(f"{script_sh}{os.path.join('.', 'venv', script_folder, 'activate')}")
-        print("python -m appserver")
+        if has_venv:
+            print(f"{script_sh}{os.path.join('.', 'venv', script_folder, 'activate')}")
+            print("python -m appserver")
         print()
         print(f"cd {os.path.join(project_path, 'client')}")
-        print(f"{script_sh}{os.path.join('.', 'venv', script_folder, 'activate')}")
-        print("npm run dev")
-        print()
-        print("Access application in web browser at http://localhost:8080")
+        if has_venv:
+            print(f"{script_sh}{os.path.join('.', 'venv', script_folder, 'activate')}")
+            if has_npm:
+                print("npm run dev")
+                print()
+                print("Access application in web browser at http://localhost:8080")
     else:
         print(f"cd {project_path}")
-        print(f"{script_sh}{os.path.join('.', 'venv', script_folder, 'activate')}")
-        print("npm start")
-        print()
-        print("Access application in web browser at http://localhost:1234")
+        if has_venv:
+            print(f"{script_sh}{os.path.join('.', 'venv', script_folder, 'activate')}")
+            if has_npm:
+                print("npm start")
+                print()
+                print("Access application in web browser at http://localhost:1234")
 
     print(f"{Style.RESET_ALL}")
 
@@ -202,7 +207,7 @@ def make_project(project_path, full_stack=True, has_venv=False, has_npm=False, h
         template_dir = fallback_dir
     else:
         if not os.path.isabs(template_dir):
-            template_dir = os.path.join(current_dir, template_dir)
+            template_dir = os.path.realpath(os.path.join(current_dir, template_dir))
 
         printmsg('Validating template...')
         if not validate_template(template_dir, full_stack, has_venv, has_npm, has_git):
@@ -313,7 +318,7 @@ def make_project(project_path, full_stack=True, has_venv=False, has_npm=False, h
         printwarn("\nNOTE: Windows users will need to set the 'script-shell' option for npm in order for the scripts to work:")
         printwarn('  npm config set script-shell "C:\\Program Files\\git\\bin\\bash.exe"\n')
 
-    print_instructions(project_path, full_stack)
+    print_instructions(project_path, full_stack, has_venv, has_npm)
 
 
 class WideFormatter(argparse.HelpFormatter):

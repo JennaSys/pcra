@@ -4,12 +4,10 @@ import sys
 
 
 # The directory containing this file
-HERE = pathlib.Path(__file__).parent
+project_folder = pathlib.Path(__file__).parent
 
-# The text of the README file
-README = (HERE / "README.md").read_text()
 
-sys.path.append(str(HERE))
+sys.path.append(str(project_folder))
 from pcra import __version__
 
 
@@ -19,6 +17,9 @@ def glob_fix(package_name, glob):
     return [str(path.relative_to(package_path))
             for path in package_path.glob(glob)]
 
+
+# The text of the README file
+README = (project_folder / "README.md").read_text()
 
 setup(
     name="pcra",
@@ -38,10 +39,11 @@ setup(
         "Topic :: Software Development :: Libraries :: Application Frameworks",
         "Programming Language :: Python :: 3.7",
         "Operating System :: OS Independent",
-        "Environment :: Console"
+        "Environment :: Console",
+        "Natural Language :: English"
     ],
     python_requires=">=3.7,<3.8",
-    keywords="react material-ui mui transcrypt cli",
+    keywords="react material-ui mui transcrypt cli web",
     packages=find_packages(include=["pcra"]),
     package_data={'pcra': [*glob_fix('pcra', 'template/**/*')]},
     install_requires=["patch", "colorama"],
