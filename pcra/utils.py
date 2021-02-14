@@ -75,6 +75,7 @@ def check_npm_installed():
 
 
 def _print_if_data(msg):
+    # Don't print blank lines
     msg_text = msg.strip()
     if len(msg_text) > 0:
         print(msg_text)
