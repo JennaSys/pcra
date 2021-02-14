@@ -75,28 +75,28 @@ def check_npm_installed():
         return False
 
 
+def print_if_data(msg):
+    msg_text = msg.strip()
+    if len(msg_text) > 0:
+        print(msg_text)
+
+
 def run_cmd(args):
     process = subprocess.Popen(args, **process_kwargs)
 
     while True:
         output = process.stdout.readline()
-        output_text = output.strip()
-        if len(output_text) > 0:
-            print(output_text)
+        print_if_data(output)
         # Do something else
         return_code = process.poll()
         if return_code is not None:
             # Process has finished, read rest of the output
             for output in process.stdout.readlines():
-                output_text = output.strip()
-                if len(output_text) > 0:
-                    print(output_text)
+                print_if_data(output)
 
             if return_code != 0:
                 print('RETURN CODE:', return_code)
                 for output in process.stderr.readlines():
-                    output_text = output.strip()
-                    if len(output_text) > 0:
-                        print(output_text)
+                    print_if_data(output)
 
             break
