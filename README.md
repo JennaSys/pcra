@@ -22,6 +22,9 @@ The script performs the following actions:
 - Initializes npm semver versioning for the front-end application
 
 
+![screenshot](pcra_screenshot.png "PCRA Screenshot")
+
+
 ### Install using Python 3.7 with:
 ```bash
 python3.7 -m pip install git+https://github.com/JennaSys/pcra --user
