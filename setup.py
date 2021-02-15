@@ -6,7 +6,6 @@ import sys
 # The directory containing this file
 project_folder = pathlib.Path(__file__).parent
 
-
 sys.path.append(str(project_folder))
 from pcra import __version__
 
