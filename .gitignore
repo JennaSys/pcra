@@ -13,4 +13,4 @@ __pycache__/
 build/
 *.egg-info/
 
-version.py
+version_util.py
