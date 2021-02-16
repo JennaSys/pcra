@@ -3,7 +3,7 @@
 
 # pcra - Python Create React App
 
-### CLI for template based project scaffolding based on the [React to Python](https://jennasys.com/rtp.html) book
+### CLI for template based project scaffolding based on the [React to Python](https://jennasys.com/rtp) book
 
 This highly opinionated but configurable script will create the initial structure for a React/Material-UI application that is _programmed in Python_ (not JavaScript!) and uses 
 [Transcrypt](https://www.transcrypt.org) to transpile the code into JavaScript.
