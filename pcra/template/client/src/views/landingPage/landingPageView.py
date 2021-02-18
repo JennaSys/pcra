@@ -65,7 +65,6 @@ def LandingPage(props):
 
     useEffect(lambda: setLoginModal(show_login), [show_login])
     useEffect(clearUser, [loginModal])
-    useEffect(lambda: setAboutShow(True), [])
 
     return el(Container, {'maxWidth': 'md'},
               el(Paper, {'style': {'padding': '1rem'}},
@@ -87,7 +86,7 @@ def LandingPage(props):
                          },
                  el(FlexboxCenter, None,
                     el(Typography, {'variant': 'h5'},
-                       el(Link, {'to': '#', 'onClick': aboutModalOpen}, "PCRA")
+                       el(Link, {'to': '#', 'onClick': aboutModalOpen}, "About")
                        ),
                     ),
                  el(FlexboxCenter, None,

@@ -10,7 +10,6 @@ import venv
 from .utils import printerr, printmsg, printwarn, Fore, Style
 from .utils import check_python_version, check_git_installed, check_npm_installed, run_cmd
 
-
 PYTHON_VERSION_REQUIRED = '3.7'
 
 is_windows = os.name == 'nt'
@@ -19,7 +18,8 @@ is_windows = os.name == 'nt'
 class PCRA:
     def __init__(self, cli_args):
         self.current_dir = os.getcwd()
-        self.has_server = not cli_args.client_only
+        self.has_client = cli_args.client_only or cli_args.full_stack
+        self.has_server = cli_args.full_stack
         self.has_venv = not cli_args.no_virtualenv
         self.has_npm = not cli_args.no_javascript
         self.has_git = not cli_args.no_git
@@ -66,7 +66,11 @@ class PCRA:
             printerr("The template path specified does not exist!")
             return False
 
-        if not os.path.isdir(os.path.join(self.template_dir, 'client')):
+        if not self.has_client and not os.path.isdir(os.path.join(self.template_dir, 'default')):
+            printerr("The 'default' folder for basic setup does not exist in the template!")
+            return False
+
+        if self.has_client and not os.path.isdir(os.path.join(self.template_dir, 'client')):
             printerr("The 'client' folder does not exist in the template!")
             return False
 
@@ -101,16 +105,22 @@ class PCRA:
 
     def copy_template(self):
         printmsg('Copying template...')
+        if self.has_client:
+            shutil.copytree(os.path.join(self.template_dir, 'client'), self.client_dir,
+                            ignore=shutil.ignore_patterns('__pycache__'))
+        else:
+            shutil.copytree(os.path.join(self.template_dir, 'default'), self.client_dir,
+                            ignore=shutil.ignore_patterns('__pycache__'))
+
         if self.has_server:
-            shutil.copytree(os.path.join(self.template_dir, 'client'), self.client_dir, ignore=shutil.ignore_patterns('__pycache__'))
+            shutil.copytree(os.path.join(self.template_dir, 'client'), self.client_dir,
+                            ignore=shutil.ignore_patterns('__pycache__'))
             self._copy_template_file(self.client_dir, 'dev-server.js')
 
             if self.has_npm:
                 os.mkdir(os.path.join(self.client_dir, '.git'))  # Empty folder so that npm version works
             printmsg('Copying server template...')
             shutil.copytree(os.path.join(self.template_dir, 'server'), os.path.join(self.project_dir, 'server'))
-        else:
-            shutil.copytree(os.path.join(self.template_dir, 'client'), self.client_dir, ignore=shutil.ignore_patterns('__pycache__'))
 
         if self.has_git:
             self._copy_template_file(self.project_dir, '.gitignore')
@@ -278,10 +288,17 @@ def main():
                         type=str,
                         help='name of the project folder (must not already exist)')
 
-    parser.add_argument('-co',
-                        '--client-only',
-                        action='store_true',
-                        help='only create client project (not full stack)')
+    option_group = parser.add_mutually_exclusive_group(required=False)
+
+    option_group.add_argument('-co',
+                              '--client-only',
+                              action='store_true',
+                              help='only create client project (not full stack)')
+
+    option_group.add_argument('-fs',
+                              '--full-stack',
+                              action='store_true',
+                              help='create full-stack project (with Flask back-end)')
 
     parser.add_argument('-nv',
                         '--no-virtualenv',
