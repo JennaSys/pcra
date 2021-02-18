@@ -25,6 +25,8 @@ class PCRA:
         self.has_git = not cli_args.no_git
         self.template_dir = cli_args.template
 
+        self.client_source_dir = 'client' if self.has_client else 'default'
+
         if self.has_server:
             printmsg("Installing full-stack scaffolding...")
         elif self.has_client:
@@ -74,16 +76,12 @@ class PCRA:
             printerr("The template path specified does not exist!")
             return False
 
-        if not self.has_client and not os.path.isdir(os.path.join(self.template_dir, 'default')):
-            printerr("The 'default' folder for basic setup does not exist in the template!")
+        if not os.path.isdir(os.path.join(self.template_dir, self.client_source_dir)):
+            printerr(f"The '{self.client_source_dir}' folder does not exist in the template!")
             return False
 
-        if self.has_client and not os.path.isdir(os.path.join(self.template_dir, 'client')):
-            printerr("The 'client' folder does not exist in the template!")
-            return False
-
-        if self.has_git and self.has_npm and not os.path.isdir(os.path.join(self.template_dir, 'client', 'src')):
-            printerr("The 'client' folder does have an src folder in the template!")
+        if self.has_git and self.has_npm and not os.path.isdir(os.path.join(self.template_dir, self.client_source_dir, 'src')):
+            printerr(f"The '{self.client_source_dir}' folder does not have a src folder in the template!")
             return False
 
         if self.has_server and not os.path.isdir(os.path.join(self.template_dir, 'server')):
@@ -144,8 +142,7 @@ class PCRA:
             script_folder = 'Scripts' if is_windows else 'bin'
 
             # Use the default requirements.txt if the supplied template doesn't have one
-            source_dir = 'client' if self.has_client else 'default'
-            if not os.path.isfile(os.path.join(self.template_dir, source_dir, 'requirements.txt')):
+            if not os.path.isfile(os.path.join(self.template_dir, self.client_source_dir, 'requirements.txt')):
                 shutil.copy2(os.path.join(self.fallback_dir, 'client', 'requirements.txt'), '.')
 
             run_cmd([os.path.join('.', 'venv', script_folder, 'pip'), 'install', '-r', 'requirements.txt'])
@@ -172,8 +169,7 @@ class PCRA:
             printmsg('Installing JavaScript dependencies...')
 
             # Use the default package.json if the supplied template doesn't have one
-            source_dir = 'client' if self.has_client else 'default'
-            if not os.path.isfile(os.path.join(self.template_dir, source_dir, 'package.json')):
+            if not os.path.isfile(os.path.join(self.template_dir, self.client_source_dir, 'package.json')):
                 shutil.copy2(os.path.join(self.fallback_dir, 'client', 'package.json'), '.')
 
             self._update_project_name()
