@@ -25,6 +25,14 @@ class PCRA:
         self.has_git = not cli_args.no_git
         self.template_dir = cli_args.template
 
+        if self.has_server:
+            printmsg("Installing full-stack scaffolding...")
+        elif self.has_client:
+            printmsg("Installing client-only scaffolding...")
+        else:
+            printmsg("Installing basic react app...")
+
+
         self.project_dir = cli_args.folder
         if not os.path.isabs(self.project_dir):
             self.project_dir = os.path.realpath(os.path.join(self.current_dir, self.project_dir))
@@ -138,7 +146,8 @@ class PCRA:
             script_folder = 'Scripts' if is_windows else 'bin'
 
             # Use the default requirements.txt if the supplied template doesn't have one
-            if not os.path.isfile(os.path.join(self.template_dir, 'client', 'requirements.txt')):
+            source_dir = 'client' if self.has_client else 'default'
+            if not os.path.isfile(os.path.join(self.template_dir, source_dir, 'requirements.txt')):
                 shutil.copy2(os.path.join(self.fallback_dir, 'client', 'requirements.txt'), '.')
 
             run_cmd([os.path.join('.', 'venv', script_folder, 'pip'), 'install', '-r', 'requirements.txt'])
@@ -165,7 +174,8 @@ class PCRA:
             printmsg('Installing JavaScript dependencies...')
 
             # Use the default package.json if the supplied template doesn't have one
-            if not os.path.isfile(os.path.join(self.template_dir, 'client', 'package.json')):
+            source_dir = 'client' if self.has_client else 'default'
+            if not os.path.isfile(os.path.join(self.template_dir, source_dir, 'package.json')):
                 shutil.copy2(os.path.join(self.fallback_dir, 'client', 'package.json'), '.')
 
             self._update_project_name()
