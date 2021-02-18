@@ -25,13 +25,13 @@ By default, the sample React application that is installed with `py-create-react
 If you would like to use the framework outlined in the _React to Python_ book, you can use the `--full-stack` command line option which will create the scaffolding for a full-stack application with a Flask back-end.
 If you only need the client side of that framework, you can use the `--client-only` option.
 
-There are also options to bypass setup for the virtual environment, installing JavaScript dependencies, and creating a Git repository.
+There are also options to bypass setup for the virtual environment, installing JavaScript dependencies, and creating a Git repository, if you prefer to set any of those up manually.
 
 If you have your own framework template that follows the same folder structure, you can specify that on the command line as well and take advantage of the automated setup features. 
 
 After installing the `pcra` package with pip, you can verify that it works by running it with:  
 `py-create-react-app my_project`  
-which will set up the project in a new **my_project** folder in the current directory.
+This will set up the structure of a project in a new **my_project** folder in the current directory.
 After it finishes the setup process, you can build and run the application using the following commands:  
 `cd my_project`  
 `source ./venv/bin/activate`  or `venv\Scripts\activate` for Windows  
