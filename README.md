@@ -37,8 +37,10 @@ After it finishes the setup process, you can build and run the application using
 `source ./venv/bin/activate`  or `venv\Scripts\activate` for Windows  
 `npm start -- --open`  
 
-![screenshot](https://github.com/JennaSys/pcra/raw/main/pcra_screenshot.png "Python Create React App Screenshot")
-![screenshot](https://github.com/JennaSys/pcra/raw/main/rtp_screenshot.png "React to Python Screenshot")
+
+Default React Project  |  React to Python Project
+:---------------------:|:------------------------:
+![screenshot](https://github.com/JennaSys/pcra/raw/main/pcra_screenshot.png "Python Create React App Screenshot")  |  ![screenshot](https://github.com/JennaSys/pcra/raw/main/rtp_screenshot.png "React to Python Screenshot")
 
 ## Installation
 ### Install using Python 3.7 with:
