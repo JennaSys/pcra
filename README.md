@@ -27,7 +27,7 @@ If you only need the client side of that framework, you can use the `--client-on
 
 There are also options to bypass the setup for the virtual environment, installing JavaScript dependencies, and creating a Git repository, if you prefer to set any of those up manually.
 
-If you have your own framework template that follows the same folder structure, you can specify that on the command line as well and take advantage of the automated setup features. 
+If you have your own framework template that follows the same folder structure as PCRA, you can specify that on the command line as well and take advantage of the automated setup features. 
 
 After installing the `pcra` package with pip, you can verify that it works by running it with:  
 `py-create-react-app my_project`  
