@@ -29,10 +29,13 @@ There are also options to bypass the setup for the virtual environment, installi
 
 If you have your own framework template that follows the same folder structure as PCRA, you can specify that on the command line as well and take advantage of the automated setup features. 
 
-After installing the `pcra` package with pip, you can verify that it works by running it with:  
-`py-create-react-app my_project`  
+After installing the `pcra` package with pip, you can verify that it works by running it with:
+
+`py-create-react-app my_project`
+
 This will set up the structure of a project in a new **my_project** folder in the current directory.
-After it finishes the setup process, you can build and run the application using the following commands:  
+After it finishes the setup process, you can build and run the application using the following commands:
+
 `cd my_project`  
 `source ./venv/bin/activate`  or `venv\Scripts\activate` for Windows  
 `npm start -- --open`  
