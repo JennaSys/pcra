@@ -32,7 +32,28 @@ def App():
                        'target': "_blank",
                        'rel': "noopener noreferrer"
                        },
-                 "Learn React"
+                 "React"
+                 ),
+              el('a', {'className': 'App-link',
+                       'href': "https://material-ui.com",
+                       'target': "_blank",
+                       'rel': "noopener noreferrer"
+                       },
+                 "Material-UI"
+                 ),
+              el('a', {'className': 'App-link',
+                       'href': "https://www.transcrypt.org",
+                       'target': "_blank",
+                       'rel': "noopener noreferrer"
+                       },
+                 "Transcrypt"
+                 ),
+              el('a', {'className': 'App-link',
+                       'href': "https://pyreact.com",
+                       'target': "_blank",
+                       'rel': "noopener noreferrer"
+                       },
+                 "React to Python"
                  )
               )
            )

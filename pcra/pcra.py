@@ -121,8 +121,6 @@ class PCRA:
                             ignore=shutil.ignore_patterns('__pycache__'))
 
         if self.has_server:
-            shutil.copytree(os.path.join(self.template_dir, 'client'), self.client_dir,
-                            ignore=shutil.ignore_patterns('__pycache__'))
             self._copy_template_file(self.client_dir, 'dev-server.js')
 
             if self.has_npm:
@@ -253,7 +251,10 @@ class PCRA:
             if self.has_venv:
                 print(f"{script_sh}{os.path.join('.', 'venv', script_folder, 'activate')}")
                 if self.has_npm:
-                    print("npm start")
+                    if self.has_client:
+                        print("npm start")
+                    else:
+                        print("npm start -- --open")
                     print()
                     print("Access application in web browser at http://localhost:1234")
 

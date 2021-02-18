@@ -79,4 +79,4 @@ def App(props):
                   )
 
 
-render(App, {'title': "PCRA"}, 'root')
+render(App, {'title': "Python React App"}, 'root')
