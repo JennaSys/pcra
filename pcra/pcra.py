@@ -285,7 +285,7 @@ class WideFormatter(argparse.HelpFormatter):
 
 def main():
     parser = argparse.ArgumentParser(prog='py-create-react-app',
-                                     description='Python Create React App: Template based Python React project scaffolding creator',
+                                     description='Python Create React App: Template-based Python React project scaffolding creator',
                                      epilog=f'NOTE: Must be run with Python version {PYTHON_VERSION_REQUIRED}',
                                      formatter_class=WideFormatter,
                                      allow_abbrev=False,

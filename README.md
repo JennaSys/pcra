@@ -3,7 +3,7 @@
 
 # pcra - Python Create React App
 
-### CLI for template based project scaffolding based on the [React to Python](https://pyract.com) book
+### CLI for template-based project scaffolding based on the [React to Python](https://pyract.com) book
 
 This highly opinionated but configurable script will create the initial structure for a React/Material-UI application that is _programmed in Python_ (not JavaScript!) and uses 
 [Transcrypt](https://www.transcrypt.org) to transpile the code into JavaScript.
@@ -21,11 +21,11 @@ The script performs the following actions:
 - Creates a local git repository and does an initial commit
 - Initializes npm semver versioning for the front-end application
 
-By default, the sample React application that is installed with `py-create-react-app` is just a placeholder for you to start building your applcation from.  It is similar to the one you get when using the JavaScript `create-react-app` command.
-If you would like to use the framework outlined in the _React to Python_ book, you can use the `--full-stack` command line option which will create the scaffolding for a full-stack application with a Flask back-end.
+By default, the sample React application that is installed with `py-create-react-app` is just a placeholder for you to start building your application from.  It is similar to the one you get when using the JavaScript `create-react-app` command.
+If you would like to use the framework outlined in the _React to Python_ book, you can use the `--full-stack` command-line option, which will create the scaffolding for a full-stack application with a Flask back-end.
 If you only need the client side of that framework, you can use the `--client-only` option.
 
-There are also options to bypass setup for the virtual environment, installing JavaScript dependencies, and creating a Git repository, if you prefer to set any of those up manually.
+There are also options to bypass the setup for the virtual environment, installing JavaScript dependencies, and creating a Git repository, if you prefer to set any of those up manually.
 
 If you have your own framework template that follows the same folder structure, you can specify that on the command line as well and take advantage of the automated setup features. 
 
@@ -56,7 +56,7 @@ py -3.7 -m pip install git+https://github.com/JennaSys/pcra
 ## Usage:
 `py-create-react-app [-h] [-co | -fs] [-nv] [-njs] [-ng] [-t TEMPLATE] FOLDER_NAME`
 
-Python Create React App: Template based Python React project scaffolding creator
+Python Create React App: Template-based Python React project scaffolding creator
 
 positional arguments:
 ```bash
