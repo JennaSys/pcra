@@ -32,7 +32,7 @@ setup(
     license="MIT",
     classifiers=[
         "License :: OSI Approved :: MIT License",
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Framework :: Flask",
         "Topic :: Software Development :: Libraries :: Application Frameworks",

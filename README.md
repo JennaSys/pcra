@@ -1,6 +1,3 @@
-## WARNING: This project is in alpha - use at your own risk!
-
-
 # pcra - Python Create React App
 
 ### CLI for template-based project scaffolding based on the [React to Python](https://pyract.com) book
@@ -48,11 +45,15 @@ Default React Project  |  React to Python Project
 ## Installation
 ### Install using Python 3.7 with:
 ```bash
+python3.7 -m pip install pcra
+```
+or to get the latest version from GitHub:
+```bash
 python3.7 -m pip install git+https://github.com/JennaSys/pcra
 ```
 On Windows you can also use:
 ```bash
-py -3.7 -m pip install git+https://github.com/JennaSys/pcra
+py -3.7 -m pip install pcra
 ```
 
 
