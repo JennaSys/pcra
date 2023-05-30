@@ -1,3 +1,8 @@
+# _This project is no longer Active_
+This project was an attempt to mimic what CRA (Create React App) does but for Python/Transcrypt and React. In practice, it became a bit too opinionated and not as useful as it first appeared it might be.  It is no longer being updated and should not be considered active.
+
+---
+
 # pcra - Python Create React App
 
 ### CLI for template-based project scaffolding based on the [React to Python](https://pyreact.com) book
